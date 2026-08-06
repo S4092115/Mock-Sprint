@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ───────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return isAuthenticated()
+        && exists(userPath)
+        && get(userPath).data.role == 'admin';
+    }
+
+    function hasCustomClaim(claim) {
+      return isAuthenticated() && request.auth.token[claim] == true;
+    }
+
+    function notDeleted() {
+      return resource == null || !('deletedAt' in resource.data) || resource.data.deletedAt == null;
+    }
+
+    // ── Collections ────────────────────────────────────────────────────────
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin()) && notDeleted();
+
+      allow create: if isAuthenticated() && isOwner(userId)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasAll(['uid', 'email', 'role', 'createdAt', 'updatedAt', '_schemaVersion'])
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'role', 'createdAt', 'updatedAt', '_schemaVersion'])
+        && request.resource.data.role == 'user';
+
+      allow update: if isAuthenticated() && isOwner(userId)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'role', 'createdAt', 'updatedAt', '_schemaVersion']);
+
+      allow delete: if false;
+    }
+
+    // notes/{noteId}
+    // Each user can only read, create, and update their own notes.
+    match /notes/{noteId} {
+      allow read:   if isAuthenticated() && isOwner(resource.data.uid);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.uid);
+      allow update: if isAuthenticated() && isOwner(resource.data.uid)
+                    && request.resource.data.uid == resource.data.uid;
+      allow delete: if false;
+    }
+
+    // ── Default deny ───────────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
