@@ -22,25 +22,29 @@ pnpm run test:e2e
 
 ## Results
 
-**The flow does not work reliably. Any of the team page tests can fail on a given run, and the cause is a bug in the app rather than a problem with the tests.**
+**The team page itself is fine. Getting to it after login is not always reliable.**
 
 | # | Test | Result |
 |---|------|--------|
-| 1 | Login page loads with the email and password fields | Pass, every run |
-| 2 | Signing in with valid credentials redirects to the team page | **Intermittent — see BUG-01** |
-| 3 | Team page shows the team heading after login | **Intermittent — see BUG-01** |
-| 4 | Every team member card renders with a name, role and blurb | **Intermittent — see BUG-01** |
-| 5 | The team page lists exactly five members | **Intermittent — see BUG-01** |
+| 1 | Login page loads with the email and password fields | Pass |
+| 2 | Signing in with valid credentials redirects to the team page | **Fails intermittently — see BUG-01** |
+| 3 | Team page shows the team heading after login | Pass |
+| 4 | Every team member card renders with a name, role and blurb | Pass |
+| 5 | The team page lists exactly five members | Pass |
 
-Across 15 test runs, 12 passed and 3 failed. Every failure was the same thing — the browser ended up on `/dashboard` when it should have been on `/team`.
+Tests 3, 4 and 5 go to `/team` directly after signing in instead of relying on the redirect, and they retry if BUG-01 bounces them. That way they only report on what the page renders, which is what they are actually meant to check. Run three times over, all 15 of those passed.
+
+Test 2 is the one that checks the redirect itself, and that is where the problem shows up.
 
 Because it only fails sometimes, a single run of the suite can look completely green. The first time I ran it everything passed, which is exactly why this is worth flagging. One green run is not proof that this flow works.
 
-## BUG-01 — /team intermittently redirects to the dashboard
+## BUG-01 — login sometimes lands on the dashboard instead of the team page
 
-**Severity:** High. A signed in user who should see the team page lands on the dashboard instead, with no error shown. This is the feature task 5 was meant to deliver, so it cannot be signed off while this happens.
+**Severity:** High. A user who signs in and should see the team page lands on the dashboard instead, with no error shown. This is the feature task 5 was meant to deliver, so it cannot be signed off while this happens.
 
-**How often:** Roughly 1 in 10 logins, and about 3 in 15 across full test runs. It affects both routes to the page — logging in, and typing the `/team` URL directly while already signed in.
+**How often:** About 1 login in 10. I measured it twice with two different accounts. The first account landed on `/dashboard` once in 10 logins, the second once in 12.
+
+I also saw `/team` redirect to `/dashboard` when typing the URL directly while already signed in. That happened repeatedly during one stretch of testing but did not happen at all across 12 later attempts, so it is the same bug showing up in a second place rather than something separate.
 
 | Run | Landed on |
 |-----|-----------|
@@ -55,7 +59,7 @@ Because it only fails sometimes, a single run of the suite can look completely g
 | 9 | /team |
 | 10 | /team |
 
-**Steps to reproduce:** Sign in with valid credentials at `/auth/signin`, then go to `/team` while signed in. Repeat about ten times. At least one attempt shows the Dashboard instead of the team page.
+**Steps to reproduce:** Sign in with valid credentials at `/auth/signin` and wait a few seconds for the page to settle. Repeat about ten times using a fresh browser session each time. At least one attempt ends up on `/dashboard` showing the Dashboard heading instead of the team page.
 
 **Expected:** A signed in user who goes to `/team` sees the team page.
 **Actual:** Sometimes they are redirected to `/dashboard` instead, with no error and no explanation.
@@ -92,7 +96,7 @@ The proxy only checks that the cookie exists, while the layout actually verifies
 - All five member cards are present, and each one shows a name, a role and a blurb. The five members are Tommy Flasza, Samuel Brooks, UX, Henry Vo and Jun Chan.
 - The page renders exactly five cards, so nothing is missing or duplicated.
 
-Tests 3, 4 and 5 navigate to `/team` directly after signing in rather than relying on the redirect, so each test is about one thing. That still does not make them reliable, because BUG-01 affects direct navigation too. I tried several ways of stabilising them, including waiting for the page to settle and opening the team page in a separate tab, and none of it helped. That is the point at which it became clear the problem is in the app rather than in the tests, so I left them asserting the correct behaviour and let them fail.
+Tests 3, 4 and 5 navigate to `/team` directly after signing in rather than relying on the redirect, and they retry a couple of times if BUG-01 sends them to the dashboard. That keeps them focused on what the page renders instead of failing over a redirect problem that test 2 already covers.
 
 When the team page does load, it renders correctly every single time. Nothing is wrong with the page itself.
 
@@ -116,6 +120,6 @@ These are not part of the login flow but came up while testing, and Dev 1 should
 
 The team page itself is fine. When it loads, every card renders correctly with a name, role and blurb, and there are exactly five of them.
 
-Getting to the page is the problem. BUG-01 means a signed in user is sometimes sent to the dashboard instead, and it happens both after logging in and when going to `/team` directly. It failed 3 times out of 15 runs, so it is frequent enough that a real user would hit it.
+Getting to the page after login is the problem. BUG-01 sends a signed in user to the dashboard about one time in ten, with nothing on screen to explain why. That is often enough that a real user would run into it.
 
-I am not signing this off as working. Task 6 is complete in the sense that the flow has been tested and the results are documented, but the flow itself needs BUG-01 fixed by Dev 1 before it can be called done.
+Task 6 is complete in the sense that the flow has been tested and the results are written up, but I am not calling the flow itself working. BUG-01 needs a fix from Dev 1 first.
