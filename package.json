@@ -19,9 +19,12 @@
     "bootstrap": "node scripts/bootstrap.js",
     "validate": "node scripts/validate-placeholders.js",
     "hooks": "lefthook install",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "dotenv": "^17.4.2",
     "lefthook": "^1.11.13",
     "next": "16.2.12"
   }

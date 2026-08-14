@@ -57,3 +57,9 @@ docs/BOILERPLATE-BENCHMARK.md
 
 # Internal QA notes — not for the public repo
 docs/REPLICATION-LOG.md
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+.playwright/
