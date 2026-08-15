@@ -3,10 +3,10 @@ import { LayoutDashboard, User, Settings, NotebookPen, Users } from 'lucide-reac
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/team', label: 'Team', icon: Users },
   { href: '/notes', label: 'Notes', icon: NotebookPen },
   { href: '/profile', label: 'Profile', icon: User },
   { href: '/settings', label: 'Settings', icon: Settings },
-  { href: '/team', label: 'Team', icon: Users },
 ]
 
 export function Sidebar() {
