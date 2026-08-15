@@ -6,11 +6,12 @@ import { test, expect, type Page } from '@playwright/test'
 const EMAIL = process.env.E2E_EMAIL ?? ''
 const PASSWORD = process.env.E2E_PASSWORD ?? ''
 
-// these are the names on the team page
+// the four real team members, from requirements.md section 5
+// there used to be a "UX" card here but the requirements say it shouldn't be
+// on the page, so it's tested as a bug in edge.spec.ts instead
 const TEAM_MEMBERS = [
   { name: 'Tommy Flasza', role: 'Project Manager' },
   { name: 'Samuel Brooks', role: 'Business Analyst' },
-  { name: 'UX', role: 'UX' },
   { name: 'Henry Vo', role: 'Developer' },
   { name: 'Jun Chan', role: 'Developer' },
 ]
@@ -87,8 +88,14 @@ test('every team member card renders with a name, role and blurb', async ({ page
   }
 })
 
-test('the team page lists exactly five members', async ({ page }) => {
+// card count is checked in edge.spec.ts against the requirements instead,
+// since the build still has the extra "UX" card on it
+test('each real team member has exactly one card', async ({ page }) => {
   const teamPage = await signInAndOpenTeamPage(page)
 
-  await expect(teamPage.locator('div.border')).toHaveCount(TEAM_MEMBERS.length)
+  for (const member of TEAM_MEMBERS) {
+    await expect(
+      teamPage.getByRole('heading', { name: member.name, level: 2, exact: true })
+    ).toHaveCount(1)
+  }
 })
