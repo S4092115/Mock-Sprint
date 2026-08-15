@@ -3,13 +3,13 @@ export default function TeamPage() {
     {
       name: "Tommy Flasza",
       role: "Project Manager",
-      photo: "/team/",
+      photo: "/team/Tommy.jpg",
       blurb: "Coordinate timelines, manage the team, and keep the project on track."
     },
     {
       name: "Samuel Brooks",
       role: "Business Analyst",
-      photo: "/team/",
+      photo: "/team/Samuel.png",
       blurb: "Define requirements, analyse stakeholder needs, and bridge business with tech."
     },
     {
@@ -21,13 +21,13 @@ export default function TeamPage() {
     {
       name: "Henry Vo",
       role: "Developer",
-      photo: "/team/",
+      photo: "/team/Henry.jpg",
       blurb: "Build the solution, code, architecture, testing, and deployment."
     },
     {
       name: "Jun Chan",
       role: "Developer",
-      photo: "/team/",
+      photo: "/team/Jun.png",
       blurb: "Build the solution, code, architecture, testing, and deployment."
     }
   ];
